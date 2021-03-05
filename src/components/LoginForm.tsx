@@ -1,7 +1,7 @@
 import React, { FC, useContext, useState, useEffect, useRef, MutableRefObject } from "react";
 import Center from 'react-center';
 import { observer } from "mobx-react";
-import { Form, Input, Button, Checkbox, notification, Avatar, Badge, Tooltip } from "antd";
+import { Form, Input, Button, Checkbox, Avatar, Badge, Tooltip } from "antd";
 import Icon from '@ant-design/icons';
 import { reactLocalStorage } from "reactjs-localstorage";
 import { StoreContext } from "src/components/App";
@@ -20,7 +20,7 @@ import UploadLockIcon from "mdi-react/UploadLockIcon";
 import SwapVerticalIcon from "mdi-react/SwapVerticalIcon";
 import DownloadLockIcon from "mdi-react/DownloadLockIcon";
 
-import { getRequest } from "src/utils";
+import { getRequest, notifyMessage } from "src/utils";
 import { SfuProxy } from "src/client";
 import * as Ion from "ion-sdk-js";
 import _ from "lodash";
@@ -70,12 +70,8 @@ const ConnectionStep = ({ step }) => {
 
 const LoginForm = () => {
 
-  const {
-    loading, setLoading
-  } = useContext(StoreContext).ionStore;
+  const { loginSuccessful } = useContext(StoreContext).ionStore;
 
-  let testUpdateLoop = null;
-  let form: any = useRef();
   let signalProxy: SfuProxy = null;
 
   const [testState, setTestState] = useState({
@@ -84,23 +80,23 @@ const LoginForm = () => {
 
   const [runTest, setRunTest] = useState({
     testing: false,
-    success: false,
+    signalSuccess: false,
   });
 
   const [loginFiled, setLoginFiled] = useState({
     roomId: 'IconTest',
     displayName: 'Guest',
-    audioOnly = false
+    audioOnly: false
   })
 
   useEffect(() => {
-
+    // initial parameters
     let localStorage = reactLocalStorage.getObject("loginInfo");
     if (localStorage) {
       setLoginFiled({
         roomId: localStorage.roomId,
         displayName: localStorage.displayName,
-        audioOnly = localStorage.audioOnly
+        audioOnly: localStorage.audioOnly
       })
       console.log(`localStorage: ${loginFiled.roomId} ${loginFiled.displayName}`);
     }
@@ -113,70 +109,74 @@ const LoginForm = () => {
       });
     }
 
+    signalProxy = SfuProxy.getInstance();
+
   }, []);
 
+  const _handleSubmit = async (values) => {
+    if (runTest.signalSuccess) {
+      loginSuccessful(true, false, values, !values.audioOnly);
+    } else {
+      notifyMessage("Signal Connect", "Connection failed, please check network.")
+    }
+  }
 
-  const _handleSubmit = (values) => {
-    setLoading(true);
-    signalProxy = SfuProxy.getInstance();
-    const client: Ion.Client = signalProxy.getClient();
+  const _testConnection = async () => {
 
+    if (!signalProxy) {
+      notifyMessage("Signal Connect", "Not found Signal server, please check configuration.")
+    }
+
+    setRunTest({
+      signalSuccess: false,
+      testing: true,
+    })
+
+    const client = signalProxy.createNewClient();
 
     signalProxy.getSfuSignal().onclose = (event: Event) => {
+      notifyMessage("Signal Connect", "Connection closed!")
+    };
 
-    }
+    signalProxy.getSfuSignal().onerror = (error: CloseEvent) => {
+      notifyMessage("Signal Connect", `Connection error!: ${error.reason}`)
+    };
 
-    signalProxy.getSfuSignal().onerror = (error: Event) => {
-
-    }
-
-    signalProxy.getSfuSignal().onopen = () => {
+    signalProxy.getSfuSignal().onopen = async () => {
       _testStep('biz', 'connected', signalProxy && signalProxy.getUrl());
       _testStep('lobby', 'pending');
       const rid = 'lobby-' + Math.floor(1000000 * Math.random());
       await client.join(rid, 'lobby-user');
       _testStep('lobby', 'joined', 'room id=' + rid);
       const localStream = await Ion.LocalStream.getUserMedia({
-        codec: 'vp9',
+        codec: 'vp8',
         resolution: 'hd',
         audio: true,
         video: true,
       });
-
       _testStep('publish', 'pending');
       client.publish(localStream);
       _testStep('publish', 'no candidates');
       client.ontrack = (track: MediaStreamTrack, stream: Ion.RemoteStream) => {
         _testStep('publish', 'published', "info");
         _testStep('subscribe', 'subscribed', 'mid: ');
+        client.leave();
+        setRunTest({
+          signalSuccess: true,
+          testing: false,
+        })
       };
     };
 
-    // set client event callback
-    client.onspeaker = (events: string[]) => {
+    client.onspeaker = (messages: string[]) => {
+      _.map(messages, message => notifyMessage("Client message", message));
+    }
 
-      // const id = event.id
-      // const meta = event.meta
-      // const info = event.jsonrpc
-      // const params = event.params
-      // if (event.method == "peer-join") {
-      //   this._notification("Peer Join", "peer => " + info.name + ", join!");
-      //   this._onSystemMessage(info.name + ", join!");
-      // } else if (event.method == "peer-leave") {
-      //   this._notification("Peer Leave", "peer => " + id + ", leave!");
-      //   this._onSystemMessage(info.name + ", leave!");
-      // }
-
-    };
   };
 
   const _validField = (errorInfo: any) => {
-    notification.info({
-      message: "please check your input",
-      description: errorInfo,
-      placement: "bottomRight"
-    });
-  };
+    notifyMessage("Signal Connect" , `Please check your input, error: ${errorInfo}`);
+  }
 
   const _testStep = (step: string, status: string, info: string = null) => {
     const prior = testState.steps[step];
@@ -189,27 +189,9 @@ const LoginForm = () => {
     console.log('Test Connection:', step, status, info);
   }
 
-  const _cleanup = async () => {
-    const client: Ion.Client = signalProxy.getClient();
-    await client.close();
-  };
-
-  window.onunload = async () => {
-    await _cleanup()
-  }
-
-  const _testConnection = async () => {
-    setRunTest({
-      ...runTest,
-      testing: true,
-    })
-    _testStep('biz', 'pending');
-  };
-
   return (
     <>
       <Form
-        ref={form}
         onFinish={_handleSubmit}
         onFinishFailed={_validField}
         className="login-form"

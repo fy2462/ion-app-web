@@ -1,3 +1,5 @@
+import { notification } from "antd";
+
 export const getRequest = () => {
     let url = location.search;
     let theRequest: any = {};
@@ -11,10 +13,19 @@ export const getRequest = () => {
     return theRequest;
 }
 
-export function objToStrMap(obj: any) {
+export const objToStrMap = (obj: any) => {
     const strMap = new Map();
     for (const k of Object.keys(obj)) {
         strMap.set(k, obj[k]);
     }
     return strMap;
 }
+
+
+export const notifyMessage = (message, description) => {
+    notification.info({
+        message: message,
+        description: description,
+        placement: 'bottomRight',
+    });
+};

@@ -22,8 +22,12 @@ class SfuProxy {
         this.client_ = new Client(this.signal_);
     }
 
-    public getClient: () => Client = () => {
+    public getDefaultClient: () => Client = () => {
         return this.client_;
+    }
+
+    public createNewClient: () => Client = () => {
+        return new Client(this.signal_);
     }
 
     public getUrl: () => string = () => {

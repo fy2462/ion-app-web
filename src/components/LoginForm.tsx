@@ -70,7 +70,7 @@ const ConnectionStep = ({ step }) => {
 
 const LoginForm = () => {
 
-  const { loginSuccessful } = useContext(StoreContext).ionStore;
+  const { setLoading, loginSuccessful } = useContext(StoreContext).ionStore;
 
   let signalProxy: SfuProxy = null;
 
@@ -117,7 +117,7 @@ const LoginForm = () => {
     if (runTest.signalSuccess) {
       loginSuccessful(true, false, values, !values.audioOnly);
     } else {
-      notifyMessage("Signal Connect", "Connection failed, please check network.")
+      notifyMessage("Signal Connect", "Do not connect the Signal, please test the connection.")
     }
   }
 
@@ -132,17 +132,22 @@ const LoginForm = () => {
       testing: true,
     })
 
-    const client = signalProxy.createNewClient();
+    setLoading(true);
+
+    let client = signalProxy.createNewClient();
 
     signalProxy.getSfuSignal().onclose = (event: Event) => {
+      setLoading(false)
       notifyMessage("Signal Connect", "Connection closed!")
     };
 
     signalProxy.getSfuSignal().onerror = (error: CloseEvent) => {
+      setLoading(false)
       notifyMessage("Signal Connect", `Connection error!: ${error.reason}`)
     };
 
     signalProxy.getSfuSignal().onopen = async () => {
+      setLoading(false)
       _testStep('biz', 'connected', signalProxy && signalProxy.getUrl());
       _testStep('lobby', 'pending');
       const rid = 'lobby-' + Math.floor(1000000 * Math.random());
@@ -161,17 +166,13 @@ const LoginForm = () => {
         _testStep('publish', 'published', "info");
         _testStep('subscribe', 'subscribed', 'mid: ');
         client.leave();
+        client = null;
         setRunTest({
           signalSuccess: true,
           testing: false,
         })
       };
     };
-
-    client.onspeaker = (messages: string[]) => {
-      _.map(messages, message => notifyMessage("Client message", message));
-    }
-
   };
 
   const _validField = (errorInfo: any) => {

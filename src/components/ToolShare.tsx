@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from "prop-types";
 import ReactDOM from 'react-dom';
-import { Modal, Button, Tooltip, Input,Icon } from 'antd';
+import { Modal, Button, Tooltip, Input } from 'antd';
+import Icon from '@ant-design/icons';
 import DotsVerticalIcon from "mdi-react/DotsVerticalIcon";
 
 export default class ToolShare extends React.Component {
@@ -67,8 +68,3 @@ export default class ToolShare extends React.Component {
         );
     }
 }
-
-ToolShare.propTypes = {
-    roomInfo: PropTypes.any,
-}
-

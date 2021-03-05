@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "sourceMap": true,
+        "noImplicitAny": false,
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "target": "ES6",
+        "jsx": "react-jsx",
+        "allowJs": true,
+        "removeComments": false,
+        "lib": [
+            "WebWorker",
+            "ES6",
+            "DOM",
+            "ES2020"
+        ],
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "baseUrl": ".",
+        "paths": {
+            "src": [
+                "./src"
+            ],
+        }
+    }
+}

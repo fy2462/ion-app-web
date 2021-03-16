@@ -1,10 +1,9 @@
-import React, { Component } from 'react';
-import { Icon } from 'antd';
+import React, { FC, Component } from 'react';
+import Icon from '@ant-design/icons';
 import UserIcon from "mdi-react/UserIcon";
+import Message from 'src/components/chat/message';
 
-const ChatBubble = () => {
-
-  const message: any = {}
+const ChatBubble: FC<{key: string, message: Message}> = (key, message) => {
 
   return (
     <div>
@@ -17,7 +16,7 @@ const ChatBubble = () => {
         <p className="sender-name">{message.senderName}</p>
         <div className='bubble-msgword'>
           <p className='pl'>
-            {this.props.message.message}
+            {message.message}
           </p>
         </div>
       </div>
@@ -25,10 +24,10 @@ const ChatBubble = () => {
     ) : message.id == 0 ? (
       <div className='bubble-right'>
           <div className='bubble-msg'>
-            <p style={{ textAlign: 'right' }} className="sender-name">{this.props.message.senderName}</p>
+            <p style={{ textAlign: 'right' }} className="sender-name">{message.senderName}</p>
             <div className='bubble-msgword'>
               <p className='pr'>
-                {this.props.message.message}
+                {message.message}
               </p>
             </div>
           </div>
@@ -41,7 +40,7 @@ const ChatBubble = () => {
       <div className='bubble-msg'>
         <div className='bubble-msgword-middle'>
           <p className='pm'>
-            {this.props.message.message}
+            {message.message}
           </p>
         </div>
       </div>

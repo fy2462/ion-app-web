@@ -3,7 +3,7 @@ import { Store } from ".";
 import _ from "lodash";
 import { reactLocalStorage } from "reactjs-localstorage";
 import Message from 'src/components/chat/message';
-import { Setting } from 'src/types';
+import { Setting, LoginInfo } from 'src/types';
 
 export default class IonStore {
     rootStore: Store;
@@ -25,9 +25,13 @@ export default class IonStore {
     @observable collapsed: boolean = true;
     @observable isFullScreen: boolean = false;
     @observable vidFit: boolean = false;
-    @observable loginInfo: any = {};
+    @observable loginInfo: LoginInfo = {
+        roomId: 'IconTest',
+        displayName: 'Guest',
+        audioOnly: false
+    };
     @observable messages: Message[] = [];
-    @observable sendMessage: string = "";
+    @observable inputMessage: string = "";
 
     constructor(rootStore: Store) {
         this.rootStore = rootStore;
@@ -88,7 +92,7 @@ export default class IonStore {
         this.setLocalVideoEnabled(localVideoEnabled);
     };
 
-    @action setSendMessages = (message: string) => {
-        this.sendMessage = message;
+    @action setInputMessages = (message: string) => {
+        this.inputMessage = message;
     };
 }

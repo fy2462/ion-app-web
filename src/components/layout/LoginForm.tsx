@@ -24,7 +24,7 @@ import { getRequest, notifyMessage } from "src/utils";
 import { SfuProxy } from "src/client";
 import * as Ion from "ion-sdk-js";
 import _ from "lodash";
-import { StepStateMap } from "src/types";
+import { StepStateMap, LoginInfo } from "src/types";
 import { parse, write, MediaAttributes } from 'sdp-transform';
 
 const TEST_STEPS: StepStateMap = {
@@ -70,7 +70,12 @@ const ConnectionStep = ({ step }) => {
 
 const LoginForm = () => {
 
-  const { setLoading, loginSuccessful } = useContext(StoreContext).ionStore;
+  const { 
+    setLoading,
+    loginSuccessful,
+    loginInfo,
+    setLoginInfo
+  } = useContext(StoreContext).ionStore;
 
   let signalProxy: SfuProxy = null;
 
@@ -83,28 +88,22 @@ const LoginForm = () => {
     signalSuccess: false,
   });
 
-  const [loginFiled, setLoginFiled] = useState({
-    roomId: 'IconTest',
-    displayName: 'Guest',
-    audioOnly: false
-  })
-
   useEffect(() => {
     // initial parameters
     let localStorage = reactLocalStorage.getObject("loginInfo");
     if (localStorage) {
-      setLoginFiled({
+      setLoginInfo({
         roomId: localStorage.roomId,
         displayName: localStorage.displayName,
         audioOnly: localStorage.audioOnly
       })
-      console.log(`localStorage: ${loginFiled.roomId} ${loginFiled.displayName}`);
+      console.log(`localStorage: ${loginInfo.roomId} ${loginInfo.displayName}`);
     }
 
     const params: any = getRequest();
     if (params && params.hasOwnProperty('room')) {
-      setLoginFiled({
-        ...loginFiled,
+      setLoginInfo({
+        ...loginInfo,
         roomId: params.room
       });
     }
@@ -176,7 +175,7 @@ const LoginForm = () => {
   };
 
   const _validField = (errorInfo: any) => {
-    notifyMessage("Signal Connect" , `Please check your input, error: ${errorInfo}`);
+    notifyMessage("Signal Connect", `Please check your input, error: ${errorInfo}`);
   }
 
   const _testStep = (step: string, status: string, info: string = null) => {
@@ -214,12 +213,12 @@ const LoginForm = () => {
         <Form.Item name="audioOnly" valuePropName='checked'>
           <Checkbox >
             Audio only
-        </Checkbox>
+          </Checkbox>
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" className="login-join-button">
             Join
-        </Button>
+          </Button>
         </Form.Item>
       </Form>
       <Center>

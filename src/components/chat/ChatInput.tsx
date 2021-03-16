@@ -9,7 +9,7 @@ const ChatInput = () => {
   let inputMessage: string;
 
   const {
-    setSendMessages
+    setInputMessages
   } = useContext(StoreContext).ionStore;
 
   const _onInputChange = (event) => {
@@ -24,7 +24,7 @@ const ChatInput = () => {
     if (msg.replace(/(^\s*)|(\s*$)/g, "").length === 0) {
       return;
     }
-    setSendMessages(msg)
+    setInputMessages(msg)
     inputMessage = ""
   }
 
@@ -34,7 +34,6 @@ const ChatInput = () => {
       _sendMessage()
     }
   }
-
 
   return (
     <div className='chat-input'>

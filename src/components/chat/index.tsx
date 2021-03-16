@@ -1,20 +1,21 @@
 'use strict'
 
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { StoreContext } from "src/components/App";
 import PropTypes from 'prop-types';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import "./style.scss";
-import { autorun } from "mobx";
 import Message from './message';
 import { observer } from "mobx-react";
+import { SfuProxy } from "src/client";
+import { Client, Signal } from "ion-sdk-js";
 
 const ChatFeed = () => {
     const { 
       messages,
       setMessages,
-      sendMessage,
+      inputMessage,
       loginInfo
   } = useContext(StoreContext).ionStore;
 
@@ -54,16 +55,18 @@ const ChatFeed = () => {
   }
 
   // monitor sendMessage
-  const _onSendMessage = (data) => {
-    console.log('Send message:' + data);
+
+  useEffect(() => {
+    console.log('Send message:' + inputMessage);
     var info = {
       "senderName": loginInfo.displayName,
-      "msg": data,
+      "msg": inputMessage,
     };
-    this.client.broadcast(info);
+    let client: Client = SfuProxy.getInstance().getDefaultClient();
+    // this.client.broadcast(info);
     let uid = 0;
-    setMessages(new Message({ id: uid, message: data, senderName: 'me' }))
-  }
+    setMessages(new Message({ id: uid, message: inputMessage, senderName: 'me' }))
+  }, [inputMessage])
 
   return (
     <div id="chat-panel" className='chat-panel'>

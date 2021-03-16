@@ -1,9 +1,13 @@
-import React from 'react';
-import { Modal, Button, Select,Tooltip,Switch } from 'antd';
+import React, { useContext, useEffect, useRef, useState, createRef } from 'react';
+import { Modal, Button, Select, Tooltip, Switch } from 'antd';
 import SoundMeter from './soundmeter';
 import PropTypes from 'prop-types';
+import { observer } from "mobx-react";
 import { reactLocalStorage } from "reactjs-localstorage";
 import "./style.scss";
+import { StoreContext } from "src/components/App";
+import { InputDevices } from "src/types";
+import _ from 'lodash';
 
 const Option = Select.Option;
 
@@ -42,112 +46,145 @@ const attachMediaStream = function (element, stream) {
     element.srcObject = stream;
 };
 
-export default class MediaSettings extends React.Component {
+const MediaSettings = () => {
 
-    constructor(props) {
-        super(props)
-        let settings = props.settings;
-        this.state = {
-            visible: false,
-            videoDevices: [],
-            audioDevices: [],
-            audioOutputDevices: [],
-            resolution: settings.resolution,
-            bandwidth: settings.bandwidth,
-            selectedAudioDevice: settings.selectedAudioDevice,
-            selectedVideoDevice: settings.selectedVideoDevice,
-            codec: settings.codec,
-            isDevMode:settings.isDevMode,
-        }
-        
-        try {
-            window.AudioContext = window.AudioContext || window.webkitAudioContext;
-            window.audioContext = new AudioContext();
-        } catch (e) {
-            console.log('Web Audio API not supported.');
-        }
+    let gStream = useRef<MediaStream>()
+    let gSoundMeter = useRef<SoundMeter>()
+    let gAudioContext = useRef<AudioContext>()
+
+    const { setting, setSetting } = useContext(StoreContext).ionStore;
+
+    const [currentSetting, setCurrentSetting] = useState({
+        visible: false,
+        videoDevices: [],
+        audioDevices: [],
+        audioOutputDevices: [],
+        resolution: setting.resolution,
+        bandwidth: setting.bandwidth,
+        selectedAudioDevice: setting.selectedAudioDevice,
+        selectedVideoDevice: setting.selectedVideoDevice,
+        codec: setting.codec,
+        isDevMode: setting.isDevMode,
+    });
+
+    const [audioLevel, setAudioLevel] = useState(0.0);
+
+    try {
+        window.AudioContext = window.AudioContext
+        gAudioContext.current = new AudioContext();
+    } catch (e) {
+        console.log('Web Audio API not supported.');
     }
 
-    updateInputDevices = () => {
+
+    const _setCurrentState = (state: any) => {
+        setCurrentSetting({ ...currentSetting, ...state })
+    }
+
+    const updateInputDevices: () => Promise<InputDevices> = () => {
         return new Promise((pResolve, pReject) => {
-            let videoDevices = [];
-            let audioDevices = [];
-            let audioOutputDevices = [];
+            let videoDevices: MediaDeviceInfo[] = [];
+            let audioDevices: MediaDeviceInfo[] = [];
+            let audioOutputDevices: MediaDeviceInfo[] = [];
             navigator.mediaDevices.enumerateDevices()
-            .then((devices) => {
-                for (let device of devices) {
-                    if (device.kind === 'videoinput') {
-                        videoDevices.push(device);
-                    } else if (device.kind === 'audioinput') {
-                        audioDevices.push(device);
-                    }else if (device.kind === 'audiooutput'){
-                        audioOutputDevices.push(device);
+                .then((devices) => {
+                    for (let device of devices) {
+                        if (device.kind === 'videoinput') {
+                            videoDevices.push(device);
+                        } else if (device.kind === 'audioinput') {
+                            audioDevices.push(device);
+                        } else if (device.kind === 'audiooutput') {
+                            audioOutputDevices.push(device);
+                        }
                     }
-                }
-            }).then(() => {
-                let data = { videoDevices, audioDevices, audioOutputDevices};
-                pResolve(data);
-            });
+                }).then(() => {
+                    let devices: InputDevices = { videoDevices, audioDevices, audioOutputDevices };
+                    pResolve(devices);
+                });
         });
     }
 
-    componentDidMount() {
-        this.updateInputDevices().then((data) => {
+    useEffect(() => {
 
-            if (this.state.selectedAudioDevice === "" && data.audioDevices.length > 0) {
-                this.state.selectedAudioDevice = data.audioDevices[0].deviceId;
+        updateInputDevices().then((devices: InputDevices) => {
+
+            let newSetting = {};
+
+            if (currentSetting.selectedAudioDevice === "" && devices.audioDevices.length > 0) {
+                _.assign(newSetting, {
+                    selectedAudioDevice: devices.audioDevices[0].deviceId
+                })
+                console.log("Selected audioDevice::" + JSON.stringify(devices.audioDevices[0]));
             }
-            if (this.state.selectedVideoDevice === "" && data.videoDevices.length > 0) {
-                this.state.selectedVideoDevice = data.videoDevices[0].deviceId;
+            if (currentSetting.selectedVideoDevice === "" && devices.videoDevices.length > 0) {
+                _.assign(newSetting, {
+                    selectedVideoDevice: devices.videoDevices[0].deviceId
+                })
+                console.log("Selected videoDevice::" + JSON.stringify(devices.videoDevices[0]));
             }
 
-            this.setState({
-                videoDevices: data.videoDevices,
-                audioDevices: data.audioDevices,
-                audioOutputDevices: data.audioOutputDevices,
-             })
-
-            this.state.audioDevices.map((device, index) => {
-                if (this.state.selectedAudioDevice == device.deviceId) {
-                    console.log("Selected audioDevice::" + JSON.stringify(device));
-                }
-            });
-            this.state.videoDevices.map((device, index) => {
-                if (this.state.selectedVideoDevice == device.deviceId) {
-                    console.log("Selected videoDevice::" + JSON.stringify(device));
-                }
-            });
+            _setCurrentState({
+                ...newSetting,
+                videoDevices: devices.videoDevices,
+                audioDevices: devices.audioDevices,
+                audioOutputDevices: devices.audioOutputDevices,
+            })
         });
 
+    }, []);
+
+
+    const _handleOk = (e) => {
+        console.log(e);
+        _setCurrentState({ visible: false, })
+        _stopPreview();
+        setSetting({
+            selectedAudioDevice: currentSetting.selectedAudioDevice,
+            selectedVideoDevice: currentSetting.selectedVideoDevice,
+            resolution: currentSetting.resolution,
+            bandwidth: currentSetting.bandwidth,
+            codec: currentSetting.codec,
+            isDevMode: currentSetting.isDevMode,
+        })
     }
 
-    soundMeterProcess = () => {
-        var val = (window.soundMeter.instant.toFixed(2) * 348) + 1;
-        this.setState({ audioLevel: val });
-        if (this.state.visible)
-            setTimeout(this.soundMeterProcess, 100);
-    }
-
-    startPreview = () => {
-        if (window.stream) {
-            closeMediaStream(window.stream);
+    const _stopPreview = () => {
+        if (gStream.current) {
+            closeMediaStream(gStream.current);
         }
-        let videoElement = this.refs['previewVideo'];
-        let audioSource = this.state.selectedAudioDevice;
-        let videoSource = this.state.selectedVideoDevice;
-        this.soundMeter = window.soundMeter = new SoundMeter(window.audioContext);
-        let soundMeterProcess = this.soundMeterProcess;
+    }
+
+    const _handleCancel = (e) => {
+        _setCurrentState({ visible: false, })
+        _stopPreview();
+    }
+    
+    const _soundMeterProcess = () => {
+        var val = parseFloat(((gSoundMeter.current.instant * 348) + 1).toFixed(2));
+        setAudioLevel(val)
+        if (currentSetting.visible)
+            setTimeout(_soundMeterProcess, 100);
+    }
+
+    const _startPreview = () => {
+        if (gStream.current) {
+            closeMediaStream(gStream.current);
+        }
+        let videoElement = document.getElementById('previewVideo');
+        let audioSource = currentSetting.selectedAudioDevice;
+        let videoSource = currentSetting.selectedVideoDevice;
+        gSoundMeter.current = new SoundMeter(gAudioContext.current);
         let constraints = {
             audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
             video: { deviceId: videoSource ? { exact: videoSource } : undefined }
         };
         navigator.mediaDevices.getUserMedia(constraints)
             .then(function (stream) {
-                window.stream = stream; // make stream available to console
+                gStream.current = stream; // make stream available to console
                 //videoElement.srcObject = stream;
                 attachMediaStream(videoElement, stream);
-                soundMeter.connectToSource(stream);
-                setTimeout(soundMeterProcess, 100);
+                gSoundMeter.current.connectToSource(stream);
+                setTimeout(_soundMeterProcess, 100);
                 // Refresh button list in case labels have become available
                 return navigator.mediaDevices.enumerateDevices();
             })
@@ -155,172 +192,129 @@ export default class MediaSettings extends React.Component {
             .catch((erro) => { });
     }
 
-    stopPreview = () => {
-        if (window.stream) {
-            closeMediaStream(window.stream);
-        }
+    const _showModal = () => {
+        _setCurrentState({ visible: true })
+        setTimeout(_startPreview, 100);
     }
 
-    componentWillUnmount() {
-
+    const _handleAudioDeviceChange = (e) => {
+        _setCurrentState({ selectedAudioDevice: e })
+        setTimeout(_startPreview, 100);
     }
 
-    showModal = () => {
-        this.setState({
-            visible: true,
-        });
-        setTimeout(this.startPreview, 100);
-    }
-
-    handleOk = (e) => {
-        console.log(e);
-        this.setState({
-            visible: false,
-        });
-        this.stopPreview();
-        if(this.props.onMediaSettingsChanged !== undefined) {
-            this.props.onMediaSettingsChanged(
-                this.state.selectedAudioDevice,
-                this.state.selectedVideoDevice,
-                this.state.resolution,
-                this.state.bandwidth,
-                this.state.codec,
-                this.state.isDevMode);
-        }
-
+    const _handleVideoDeviceChange = (e) => {
+        _setCurrentState({ selectedVideoDevice: e })
+        setTimeout(_startPreview, 100);
 
     }
 
-    handleCancel = (e) => {
-        this.setState({
-            visible: false,
-        });
-        this.stopPreview();
+    const _handleResolutionChange = (e) => {
+        _setCurrentState({ bandwidth: e })
     }
 
-    handleAudioDeviceChange = (e) => {
-        this.setState({ selectedAudioDevice: e });
-        setTimeout(this.startPreview, 100);
+    const _handleVideoCodeChange = (code) => {
+        _setCurrentState({ bandwidth: code })
     }
 
-    handleVideoDeviceChange = (e) => {
-        this.setState({ selectedVideoDevice: e });
-        setTimeout(this.startPreview, 100);
+    const _handleBandWidthChange = (e) => {
+        _setCurrentState({ bandwidth: e })
     }
 
-    handleResolutionChange = (e) => {
-        this.setState({ resolution: e });
+    const _handleDevChange = (checked) => {
+        _setCurrentState({ isDevMode: checked })
     }
 
-    handleVideoCodeChange = (e) => {
-        this.setState({ codec: e });
-    }
 
-    handleBandWidthChange = (e) => {
-        this.setState({ bandwidth: e });
-    }
-
-    handleDevChange = (checked) => {
-        this.setState({
-            isDevMode:checked,
-        });
-    }
-
-    render() {
-        return (
-            <div>
-                {
-                    <Tooltip title='System setup'>
-                        <Button shape="circle" icon="setting" ghost onClick={this.showModal}/>
-                    </Tooltip>
-                }
-                <Modal
-                    title='Settings'
-                    visible={this.state.visible}
-                    onOk={this.handleOk}
-                    onCancel={this.handleCancel}
-                    okText='Ok'
-                    cancelText='Cancel'>
-                    <div className="settings-item">
-                        <span className="settings-item-left">DevMode</span>
-                        <div className="settings-item-right">
-                            <Switch checked={this.state.isDevMode} onChange={this.handleDevChange} />
+    return (
+        <div>
+            {
+                <Tooltip title='System setup'>
+                    <Button shape="circle" icon="setting" ghost onClick={_showModal} />
+                </Tooltip>
+            }
+            <Modal
+                title='Settings'
+                visible={currentSetting.visible}
+                onOk={_handleOk}
+                onCancel={_handleCancel}
+                okText='Ok'
+                cancelText='Cancel'>
+                <div className="settings-item">
+                    <span className="settings-item-left">DevMode</span>
+                    <div className="settings-item-right">
+                        <Switch checked={currentSetting.isDevMode} onChange={_handleDevChange} />
+                    </div>
+                </div>
+                <div className="settings-item">
+                    <span className="settings-item-left">Micphone</span>
+                    <div className="settings-item-right">
+                        <Select value={currentSetting.selectedAudioDevice} style={{ width: 350 }} onChange={_handleAudioDeviceChange}>
+                            {
+                                currentSetting.audioDevices.map((device, index) => {
+                                    return (<Option value={device.deviceId} key={device.deviceId}>{device.label}</Option>);
+                                })
+                            }
+                        </Select>
+                        <div ref="progressbar" style={{
+                            width: audioLevel + 'px',
+                            height: '10px',
+                            backgroundColor: '#8dc63f',
+                            marginTop: '20px',
+                        }}>
                         </div>
                     </div>
-                    <div className="settings-item">
-                        <span className="settings-item-left">Micphone</span>
-                        <div className="settings-item-right">
-                            <Select value={this.state.selectedAudioDevice} style={{ width: 350 }} onChange={this.handleAudioDeviceChange}>
-                                {
-                                    this.state.audioDevices.map((device, index) => {
-                                        return (<Option value={device.deviceId} key={device.deviceId}>{device.label}</Option>);
-                                    })
-                                }
-                            </Select>
-                            <div ref="progressbar" style={{
-                                width: this.state.audioLevel + 'px',
-                                height: '10px',
-                                backgroundColor: '#8dc63f',
-                                marginTop: '20px',
-                            }}>
-                            </div>
+                </div>
+                <div className="settings-item">
+                    <span className="settings-item-left">Camera</span>
+                    <div className="settings-item-right">
+                        <Select value={currentSetting.selectedVideoDevice} style={{ width: 350 }} onChange={_handleVideoDeviceChange}>
+                            {
+                                currentSetting.videoDevices.map((device, index) => {
+                                    return (<Option value={device.deviceId} key={device.deviceId}>{device.label}</Option>);
+                                })
+                            }
+                        </Select>
+                        <div className="settings-video-container">
+                            <video id='previewVideo' ref='previewVideo' autoPlay playsInline muted={true} style={{ width: '100%', height: '100%', objectFit: 'contain' }}></video>
                         </div>
-                    </div>
-                    <div className="settings-item">
-                        <span className="settings-item-left">Camera</span>
-                        <div className="settings-item-right">
-                            <Select value={this.state.selectedVideoDevice} style={{ width: 350 }} onChange={this.handleVideoDeviceChange}>
-                                {
-                                    this.state.videoDevices.map((device, index) => {
-                                        return (<Option value={device.deviceId} key={device.deviceId}>{device.label}</Option>);
-                                    })
-                                }
-                            </Select>
-                            <div className="settings-video-container">
-                                <video id='previewVideo' ref='previewVideo' autoPlay playsInline muted={true} style={{ width: '100%', height: '100%', objectFit: 'contain' }}></video>
-                            </div>
 
-                        </div>
                     </div>
-                    <div className="settings-item">
-                        <span className="settings-item-left">Quality</span>
-                        <div className="settings-item-right">
-                            <Select style={{ width: 350 }} value={this.state.resolution} onChange={this.handleResolutionChange}>
-                                <Option value="qvga">QVGA(320x180)</Option>
-                                <Option value="vga">VGA(640x360)</Option>
-                                <Option value="shd">SHD(960x540)</Option>
-                                <Option value="hd">HD(1280x720)</Option>
-                            </Select>
-                        </div>
+                </div>
+                <div className="settings-item">
+                    <span className="settings-item-left">Quality</span>
+                    <div className="settings-item-right">
+                        <Select style={{ width: 350 }} value={currentSetting.resolution} onChange={_handleResolutionChange}>
+                            <Option value="qvga">QVGA(320x180)</Option>
+                            <Option value="vga">VGA(640x360)</Option>
+                            <Option value="shd">SHD(960x540)</Option>
+                            <Option value="hd">HD(1280x720)</Option>
+                        </Select>
                     </div>
-                    <div className="settings-item">
-                        <span className="settings-item-left">VideoCode</span>
-                        <div className="settings-item-right">
-                            <Select style={{ width: 350 }} value={this.state.codec} onChange={this.handleVideoCodeChange}>
-                                <Option value="h264">H264</Option>
-                                <Option value="vp8">VP8</Option>
-                                <Option value="vp9">VP9</Option>
-                            </Select>
-                        </div>
+                </div>
+                <div className="settings-item">
+                    <span className="settings-item-left">VideoCode</span>
+                    <div className="settings-item-right">
+                        <Select style={{ width: 350 }} value={currentSetting.codec} onChange={_handleVideoCodeChange}>
+                            <Option value="h264">H264</Option>
+                            <Option value="vp8">VP8</Option>
+                            <Option value="vp9">VP9</Option>
+                        </Select>
                     </div>
-                    <div className="settings-item">
-                        <span className="settings-item-left">Bandwidth</span>
-                        <div className="settings-item-right">
-                            <Select style={{ width: 350 }} value={this.state.bandwidth} onChange={this.handleBandWidthChange}>
-                                <Option value="256">Low(256kbps)</Option>
-                                <Option value="512">Medium(512kbps)</Option>
-                                <Option value="1024">High(1Mbps)</Option>
-                                <Option value="4096">Lan(4Mbps)</Option>
-                            </Select>
-                        </div>
+                </div>
+                <div className="settings-item">
+                    <span className="settings-item-left">Bandwidth</span>
+                    <div className="settings-item-right">
+                        <Select style={{ width: 350 }} value={currentSetting.bandwidth} onChange={_handleBandWidthChange}>
+                            <Option value="256">Low(256kbps)</Option>
+                            <Option value="512">Medium(512kbps)</Option>
+                            <Option value="1024">High(1Mbps)</Option>
+                            <Option value="4096">Lan(4Mbps)</Option>
+                        </Select>
                     </div>
-                </Modal>
-            </div>
-        );
-    }
+                </div>
+            </Modal>
+        </div>
+    );
 }
 
-
-MediaSettings.propTypes = {
-    onMediaSettingsChanged: PropTypes.func
-}
+export default observer(MediaSettings);

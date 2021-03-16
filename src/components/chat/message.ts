@@ -1,8 +1,8 @@
 export default class Message {
 
-  id: string;
-  message: string;
-  senderName: string;
+  public id: string;
+  public message: string;
+  public senderName: string;
 
   constructor(messageData) {
     this.id = messageData.id;

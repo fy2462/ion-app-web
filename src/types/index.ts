@@ -19,3 +19,15 @@ export interface StepState {
     status: string,
     info?: string,
 }
+
+export interface InputDevices {
+    videoDevices: MediaDeviceInfo[],
+    audioDevices: MediaDeviceInfo[],
+    audioOutputDevices: MediaDeviceInfo[],
+}
+
+export interface LoginInfo {
+    displayName: string,
+    roomId: string,
+    audioOnly: boolean,
+}

@@ -1,12 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react";
-import { reactLocalStorage } from "reactjs-localstorage";
 import { Layout, Button, Modal, notification, Tooltip } from "antd";
 import Icon from '@ant-design/icons';
 const { confirm } = Modal
 const { Header } = Layout;
 import { StoreContext } from "src/components/App";
-import ToolShare from '../ToolShare';
+import ToolShare from './ToolShare';
 import MediaSettings from '../settings';
 // icon
 import MicrophoneIcon from "mdi-react/MicrophoneIcon";
@@ -17,7 +16,7 @@ import HangupIcon from "mdi-react/PhoneHangupIcon";
 import TelevisionIcon from "mdi-react/TelevisionIcon";
 import TelevisionOffIcon from "mdi-react/TelevisionOffIcon";
 // assets
-import pionLogo from 'assets/images/pion-logo.svg';
+const pionLogo = require("assets/images/pion-logo.svg") as string;
 import "styles/css/app.scss";
 
 const IonHeader = () => {
@@ -29,53 +28,9 @@ const IonHeader = () => {
         screenSharingEnabled,
         setLocalAudioEnabled,
         setLocalVideoEnabled,
-        setLoginInfo,
         setScreenSharingEnabled,
         setLogin,
-        loginSuccessful
     } = useContext(StoreContext).ionStore;
-
-    const _handleAudioTrackEnabled = enabled => {
-        setLocalAudioEnabled(enabled);
-        this.conference.muteMediaTrack("audio", enabled);
-    };
-
-    const _handleVideoTrackEnabled = enabled => {
-        setLocalVideoEnabled(enabled);
-        this.conference.muteMediaTrack("video", enabled);
-    };
-
-    const _notification = (message, description) => {
-        notification.info({
-            message: message,
-            description: description,
-            placement: 'bottomRight',
-        });
-    };
-
-    const _cleanUp = async () => {
-        await this.conference.cleanUp();
-        await this.client.leave();
-    };
-
-    const _handleTransportOpen = async (values) => {
-        setLoginInfo()
-        reactLocalStorage.remove("loginInfo");
-        reactLocalStorage.setObject("loginInfo", values);
-        // await this.client.join(values.roomId, { name: values.displayName });
-
-        loginSuccessful(true, false, values, !values.audioOnly);
-        _notification(
-            "Connected!",
-            "Welcome to the ion room => " + values.roomId
-        );
-        await this.conference.handleLocalStream(true);
-    }
-
-    const _handleScreenSharing = enabled => {
-        setScreenSharingEnabled(enabled);
-        this.conference.handleScreenSharing(enabled);
-    };
 
     const _handleLeave = async () => {
         confirm({
@@ -83,7 +38,6 @@ const IonHeader = () => {
             content: "Do you want to leave the room?",
             async onOk() {
                 console.log("OK");
-                await _cleanUp();
                 setLogin(false);
             },
             onCancel() {
@@ -107,7 +61,7 @@ const IonHeader = () => {
                             size="large"
                             style={{ color: localAudioEnabled ? "" : "red" }}
                             type="link"
-                            onClick={() => _handleAudioTrackEnabled(!localAudioEnabled)}
+                            onClick={() => setLocalAudioEnabled(!localAudioEnabled) }
                         >
                             <Icon
                                 component={
@@ -123,9 +77,7 @@ const IonHeader = () => {
                             size="large"
                             style={{ color: localVideoEnabled ? "" : "red" }}
                             type="link"
-                            onClick={() =>
-                                _handleVideoTrackEnabled(!localVideoEnabled)
-                            }
+                            onClick={() => setLocalVideoEnabled(!localVideoEnabled)}
                         >
                             <Icon
                                 component={localVideoEnabled ? VideoIcon : VideocamOffIcon}
@@ -138,7 +90,7 @@ const IonHeader = () => {
                             shape="circle"
                             ghost
                             size="large"
-                            type="danger"
+                            danger
                             style={{ marginLeft: 16, marginRight: 16 }}
                             onClick={_handleLeave}
                         >
@@ -154,7 +106,7 @@ const IonHeader = () => {
                             size="large"
                             type="link"
                             style={{ color: screenSharingEnabled ? "red" : "" }}
-                            onClick={() => _handleScreenSharing(!screenSharingEnabled)}
+                            onClick={() => setScreenSharingEnabled(!screenSharingEnabled)}
                         >
                             <Icon
                                 component={

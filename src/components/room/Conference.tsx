@@ -9,7 +9,6 @@ import { Stream } from "src/types";
 import "../styles/css/conference.scss";
 import _ from "lodash";
 
-
 const Conference: FC<{}> = () => {
 
   const client: Ion.Client = SfuProxy.getInstance().getDefaultClient();
@@ -21,8 +20,6 @@ const Conference: FC<{}> = () => {
     setting,
     loginInfo
   } = useContext(StoreContext).ionStore;
-
-
 
   const [streams, setStreams] = useState<Stream[]>([])
   const [localStream, setLocalStream] = useState<Ion.LocalStream>(null)

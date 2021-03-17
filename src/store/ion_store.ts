@@ -2,8 +2,7 @@ import { observable, action, computed } from "mobx";
 import { Store } from ".";
 import _ from "lodash";
 import { reactLocalStorage } from "reactjs-localstorage";
-import Message from 'src/components/chat/message';
-import { Setting, LoginInfo } from 'src/types';
+import { Setting, LoginInfo, Message } from 'src/types';
 
 export default class IonStore {
     rootStore: Store;

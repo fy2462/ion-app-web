@@ -1,12 +1,10 @@
-'use strict'
-
 import React, { useContext, useEffect } from "react";
 import { StoreContext } from "src/components/App";
 import PropTypes from 'prop-types';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import "./style.scss";
-import Message from './message';
+import { Message } from 'src/types';
 import { observer } from "mobx-react";
 import { SfuProxy } from "src/client";
 import { Client, Signal } from "ion-sdk-js";

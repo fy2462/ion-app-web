@@ -42,7 +42,7 @@ export interface Stream {
 export interface MainVideoProps {
     id: string,
     stream: MediaStream,
-} 
+}
 
 export interface LocalVideoProps extends MainVideoProps {
     label: string,
@@ -54,5 +54,11 @@ export interface LocalVideoProps extends MainVideoProps {
 export interface SmallVideoProps extends MainVideoProps {
     videoCount: number,
     index: number,
-    onClick: ({id: string, index: number}) => void
+    onClick: ({ id: string, index: number }) => void
+}
+
+export interface Message {
+    id: string,
+    message: string,
+    senderName: string
 }

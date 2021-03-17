@@ -1,6 +1,4 @@
 import React, { useState, useContext, FC } from 'react';
-import PropTypes from "prop-types";
-import ReactDOM from 'react-dom';
 import { observer } from "mobx-react";
 import { Modal, Button, Tooltip, Input } from 'antd';
 import Icon from '@ant-design/icons';
@@ -10,9 +8,7 @@ import { StoreContext } from "src/components/App";
 
 const ToolShare: FC<{}> = () => {
 
-    const {
-        loginInfo
-      } = useContext(StoreContext).ionStore;
+    const { loginInfo } = useContext(StoreContext).ionStore;
 
     const [visible, setVisible] = useState(false)
     const [url, setUrl] = useState("")
@@ -50,7 +46,6 @@ const ToolShare: FC<{}> = () => {
             </Modal>
         </div>
     );
-
 }
 
 export default observer(ToolShare)

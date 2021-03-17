@@ -1,4 +1,4 @@
-import { ComponentType, ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 export interface Setting {
     selectedAudioDevice: string,
@@ -30,4 +30,29 @@ export interface LoginInfo {
     displayName: string,
     roomId: string,
     audioOnly: boolean,
+}
+
+export interface Stream {
+    stream_id: string,
+    track_id: string,
+    stream: MediaStream,
+    track: MediaStreamTrack
+}
+
+export interface MainVideoProps {
+    id: string,
+    stream: MediaStream,
+} 
+
+export interface LocalVideoProps extends MainVideoProps {
+    label: string,
+    audioMuted: boolean,
+    videoMuted: boolean,
+    videoType: string,
+}
+
+export interface SmallVideoProps extends MainVideoProps {
+    videoCount: number,
+    index: number,
+    onClick: ({id: string, index: number}) => void
 }

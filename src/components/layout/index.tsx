@@ -29,14 +29,17 @@ const useUnload = (fn) => {
 };
 
 const ContentLayout = () => {
+  
   const {
     login,
     setSetting,
     loading,
     messages,
+    loginInfo,
     setMessages,
-    loginInfo
   } = useContext(StoreContext).ionStore;
+
+  let client: Ion.Client = SfuProxy.getInstance().getDefaultClient();
 
   useEffect(() => {
     let settings: Setting = reactLocalStorage.getObject("settings");
@@ -70,7 +73,6 @@ const ContentLayout = () => {
       //   notifyMessage("Peer Leave", "peer => " + id + ", leave!");
       //   _onSystemMessage(info.name + ", leave!")
       // });
-      let client: Ion.Client = SfuProxy.getInstance().getDefaultClient();
       client.join(loginInfo.roomId, loginInfo.displayName).then(() => {
 
       });
@@ -81,11 +83,12 @@ const ContentLayout = () => {
       //   console.log("broadcast %s,%s!", mid, info);
       //   this._onMessageReceived(info);
       // });
+      client.ondatachannel = (ev: RTCDataChannelEvent) => {}
 
 
     } else {
       // remove client resouce
-      // await _cleanUp();
+      _cleanUp()
     }
   }, [login]);
 
@@ -95,13 +98,11 @@ const ContentLayout = () => {
   }
 
   const _cleanUp = async () => {
-    // using effect when login == false
-    // await this.conference.cleanUp();
-    // await this.client.leave();
+    client.leave();
   };
 
   useUnload(event => {
-    // await _cleanUp();
+    _cleanUp();
   });
 
 

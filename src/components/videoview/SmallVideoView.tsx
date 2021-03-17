@@ -1,53 +1,38 @@
-import React from "react";
+import React, { FC, MutableRefObject, useRef, useContext, useEffect, useState } from "react";
+import { SmallVideoProps } from "src/types";
 
-class SmallVideoView extends React.Component {
+const SmallVideoView: FC<SmallVideoProps> = (props) => {
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      clientWidth:document.body.offsetWidth,
-      clientHeight:document.body.offsetHeight,
+  let videoRef: MutableRefObject<HTMLVideoElement | null> = useRef()
+
+  const [ offset, setOffset ] = useState({
+    clientWidth: document.body.offsetWidth,
+    clientHeight: document.body.offsetHeight
+  })
+
+  useEffect(() => {
+    videoRef.current!.srcObject = props.stream
+    return () => {
+      videoRef.current!.srcObject = null
     }
-  }
+  }, [videoRef])
 
-  componentDidMount = () => {
-    const { stream } = this.props;
-    this.video.srcObject = stream;
-
-
-  };
-
-  componentWillUnmount = () => {
-    this.video.srcObject = null;
-  }
-
-  _handleClick = () => {
-    let { id, index } = this.props;
-    this.props.onClick({ id, index });
-  };
-
-  render = () => {
-    const { id, stream } = this.props;
-
-    return (
-      <div onClick={this._handleClick} className="small-video-div">
-        <video
-          ref={ref => {
-            this.video = ref;
-          }}
-          id={id}
-          autoPlay
-          playsInline
-          muted={false}
-          className="small-video-size"
-        />
-        <div className="small-video-id-div">
-          <a className="small-video-id-a">{stream.info.name}</a>
-        </div>
-
+  return (
+    <div onClick={() => { props.onClick({ id: props.id, index: props.index}) }} className="small-video-div">
+      <video
+        ref={videoRef}
+        id={props.id}
+        autoPlay
+        playsInline
+        muted={false}
+        className="small-video-size"
+      />
+      <div className="small-video-id-div">
+        <a className="small-video-id-a">{props.id}</a>
       </div>
-    );
-  };
+    </div>
+  );
+
 }
 
 export default SmallVideoView;

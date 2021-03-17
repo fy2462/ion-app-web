@@ -34,9 +34,6 @@ const Conference: FC<{}> = () => {
         track_id: track.id, 
         stream, track
       })
-      if (track.kind === "video") {
-        stream.preferLayer("medium")
-      }
       setStreams(_.concat([], ...streams, {
         stream_id: stream.id,
         track_id: track.id, 
@@ -68,8 +65,8 @@ const Conference: FC<{}> = () => {
   };
 
   const _handleRemoveStream = async (stream: Stream) => {
-    let streams_filtered = streams.filter(item => item.stream_id !== stream.stream_id);
     stream.track.stop();
+    let streams_filtered = streams.filter(item => item.stream_id !== stream.stream_id);
     setStreams(streams_filtered)
   };
 

@@ -2,8 +2,7 @@ import { Layout, Modal, Card, Spin } from "antd";
 const { confirm } = Modal;
 const { Footer } = Layout;
 import { reactLocalStorage } from "reactjs-localstorage";
-import Message from '../chat/message';
-import "styles/css/app.scssa";
+import "styles/css/app.scss";
 import { observer } from "mobx-react";
 import { StoreContext } from "src/components/App";
 import IonHeader from "./Header";
@@ -94,7 +93,7 @@ const ContentLayout = () => {
 
   const _onSystemMessage = (msg) => {
     let uid = 2;
-    setMessages(new Message({ id: uid, message: msg, senderName: 'System' }));
+    setMessages({ id: uid.toString(), message: msg, senderName: 'System' });
   }
 
   const _cleanUp = async () => {

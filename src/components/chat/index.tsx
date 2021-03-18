@@ -63,7 +63,7 @@ const ChatFeed = () => {
     let client: Client = SfuProxy.getInstance().getDefaultClient();
     // this.client.broadcast(info);
     let uid = 0;
-    setMessages(new Message({ id: uid, message: inputMessage, senderName: 'me' }))
+    setMessages({ id: uid.toString(), message: inputMessage, senderName: 'me' })
   }, [inputMessage])
 
   return (

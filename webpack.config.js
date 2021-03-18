@@ -32,7 +32,7 @@ module.exports = (env) => {
             {
               loader: "file-loader",
               options: {
-                name: "assets/[name].[ext]",
+                name: "[path][name].[ext]",
               },
             },
             {
@@ -57,7 +57,7 @@ module.exports = (env) => {
         src: path.resolve(__dirname, "src"),
         styles: path.resolve(__dirname, "src/styles"),
         assets: path.resolve(__dirname, "src/assets"),
-        config: path.resolve(__dirname, "configs")
+        config: path.resolve(__dirname, "configs"),
       },
     },
     output: {

@@ -6,7 +6,7 @@ import { SfuProxy } from "src/client";
 import * as Ion from "ion-sdk-js";
 import { StoreContext } from "src/components/App";
 import { Stream } from "src/types";
-import "../styles/css/conference.scss";
+import "styles/css/conference.scss";
 import _ from "lodash";
 
 const Conference: FC<{}> = () => {

@@ -6,7 +6,7 @@ import Icon from '@ant-design/icons';
 import { reactLocalStorage } from "reactjs-localstorage";
 import { StoreContext } from "src/components/App";
 // icon and css
-import "../styles/css/login.scss";
+import "styles/css/login.scss";
 import CheckIcon from "mdi-react/CheckIcon";
 import ShuffleIcon from "mdi-react/ShuffleIcon";
 import NetworkIcon from "mdi-react/NetworkIcon";

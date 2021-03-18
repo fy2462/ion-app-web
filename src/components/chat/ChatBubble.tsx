@@ -1,6 +1,6 @@
 import React, { FC, Component } from 'react';
 import Icon from '@ant-design/icons';
-import UserIcon from "mdi-react/UserIcon";
+import UserIcon from "@mdi/react";
 import { Message } from 'src/types';
 
 const ChatBubble: FC<{key: string, message: Message}> = (key, message) => {

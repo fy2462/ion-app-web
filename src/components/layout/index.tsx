@@ -12,7 +12,7 @@ import React, { useContext, useEffect, useState, useRef } from "react";
 import { Setting } from 'src/types';
 import { notifyMessage } from 'src/utils';
 import { SfuProxy } from "src/client";
-import * as Ion from "ion-sdk-js";
+import * as Ion from "src/sdk";
 import _ from "lodash";
 
 

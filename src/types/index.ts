@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 export interface Setting {
     selectedAudioDevice: string,
     selectedVideoDevice: string,
-    resolution: string,
+    resolution: "hd" | "qvga" | "vga" | "shd" | "fhd" | "qhd",
     bandwidth: number,
     codec: "vp8" | "vp9" | "hd264",
     isDevMode: boolean,

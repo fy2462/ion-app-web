@@ -1,24 +1,24 @@
-import { Client, Signal } from "ion-sdk-js";
-import { IonSFUJSONRPCSignal } from 'ion-sdk-js/lib/signal/json-rpc-impl';
+import { Client, Signal } from "src/sdk";
+import { IonSFUGRPCWebSignal } from 'src/sdk/signal/grpc-web-impl';
 const serverConfig = require("config/config.json")
 
 const getUrl: () => string = () => {
     const is_dev_mode = process.env.NODE_ENV == "development";
     const proto = is_dev_mode ? "ws" : "wss";
     const url = proto + "://" + serverConfig.serverIp;
-    return url;
+    return "http://" + serverConfig.serverIp;
 }
 
 class SfuProxy {
 
     private static instance: SfuProxy;
     private client_: Client;
-    private signal_: IonSFUJSONRPCSignal;
+    private signal_: IonSFUGRPCWebSignal;
     private url_: string;
 
     private constructor() {
         const url = getUrl();
-        this.signal_ = new IonSFUJSONRPCSignal(url);
+        this.signal_ = new IonSFUGRPCWebSignal(url);
         this.client_ = new Client(this.signal_);
     }
 
@@ -34,7 +34,7 @@ class SfuProxy {
         return this.url_;
     }
 
-    public getSfuSignal: () => IonSFUJSONRPCSignal = () => {
+    public getSfuSignal: () => IonSFUGRPCWebSignal = () => {
         return this.signal_;
     }
 

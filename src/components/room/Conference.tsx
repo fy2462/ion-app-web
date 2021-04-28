@@ -3,7 +3,7 @@ import { Spin, notification } from "antd";
 import { LocalVideoView, MainVideoView, SmallVideoView } from "../videoview";
 import { observer } from "mobx-react";
 import { SfuProxy } from "src/client";
-import * as Ion from "ion-sdk-js";
+import * as Ion from "src/sdk";
 import { StoreContext } from "src/components/App";
 import { Stream } from "src/types";
 import "styles/css/conference.scss";

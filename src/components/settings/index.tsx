@@ -4,6 +4,9 @@ import SoundMeter from './soundmeter';
 import PropTypes from 'prop-types';
 import { observer } from "mobx-react";
 import { reactLocalStorage } from "reactjs-localstorage";
+import SettingsOutlineIcon from "mdi-react/SettingsOutlineIcon";
+import Icon from '@ant-design/icons';
+
 import "./style.scss";
 import { StoreContext } from "src/components/App";
 import { InputDevices } from "src/types";
@@ -86,7 +89,8 @@ const MediaSettings = () => {
             let videoDevices: MediaDeviceInfo[] = [];
             let audioDevices: MediaDeviceInfo[] = [];
             let audioOutputDevices: MediaDeviceInfo[] = [];
-            navigator.mediaDevices.enumerateDevices()
+            const mediaDevices = navigator.mediaDevices as any;
+            mediaDevices.enumerateDevices()
                 .then((devices) => {
                     for (let device of devices) {
                         if (device.kind === 'videoinput') {
@@ -158,7 +162,7 @@ const MediaSettings = () => {
         _setCurrentState({ visible: false, })
         _stopPreview();
     }
-    
+
     const _soundMeterProcess = () => {
         var val = parseFloat(((gSoundMeter.current.instant * 348) + 1).toFixed(2));
         setAudioLevel(val)
@@ -229,7 +233,12 @@ const MediaSettings = () => {
         <div>
             {
                 <Tooltip title='System setup'>
-                    <Button shape="circle" icon="setting" ghost onClick={_showModal} />
+                    <Button shape="circle" ghost onClick={_showModal} >
+                        <Icon
+                            component={SettingsOutlineIcon}
+                            style={{ display: "flex", justifyContent: "center" }}
+                        />
+                    </Button>
                 </Tooltip>
             }
             <Modal

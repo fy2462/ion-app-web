@@ -16,7 +16,7 @@ import HangupIcon from "mdi-react/PhoneHangupIcon";
 import TelevisionIcon from "mdi-react/TelevisionIcon";
 import TelevisionOffIcon from "mdi-react/TelevisionOffIcon";
 // assets
-const pionLogo = require("assets/images/pion-logo.svg") as string;
+const pionLogo = require("assets/images/pion-logo.svg");
 import "styles/css/app.scss";
 
 const IonHeader = () => {

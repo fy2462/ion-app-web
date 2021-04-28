@@ -3,7 +3,7 @@
         "outDir": "./dist/",
         "sourceMap": true,
         "noImplicitAny": false,
-        "module": "CommonJS",
+        "module": "esnext",
         "moduleResolution": "node",
         "target": "ES6",
         "jsx": "react-jsx",
@@ -12,16 +12,21 @@
         "lib": [
             "WebWorker",
             "ES6",
-            "DOM",
+            "dom",
             "ES2020"
         ],
         "esModuleInterop": true,
         "experimentalDecorators": true,
-        "baseUrl": ".",
+        "baseUrl": "./",
         "paths": {
             "src": [
                 "./src"
             ],
         }
-    }
+    },
+    "include": [
+        "decs.d.ts",
+        "src"
+    ],
+    "exclude": ["node_modules"]
 }

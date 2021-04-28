@@ -7,7 +7,7 @@ import "./style.scss";
 import { Message } from 'src/types';
 import { observer } from "mobx-react";
 import { SfuProxy } from "src/client";
-import { Client, Signal } from "ion-sdk-js";
+import { Client, Signal } from "src/sdk";
 
 const ChatFeed = () => {
     const { 

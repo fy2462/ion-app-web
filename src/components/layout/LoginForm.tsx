@@ -22,7 +22,7 @@ import DownloadLockIcon from "mdi-react/DownloadLockIcon";
 
 import { getRequest, notifyMessage } from "src/utils";
 import { SfuProxy } from "src/client";
-import * as Ion from "ion-sdk-js";
+import * as Ion from "src/sdk";
 import _ from "lodash";
 import { StepStateMap, LoginInfo } from "src/types";
 import { parse, write, MediaAttributes } from 'sdp-transform';
@@ -52,10 +52,10 @@ const ConnectionStep = ({ step }) => {
       step.status === 'warning' || step.status === 'no candidates' ? 'orange' :
         step.status === 'error' ? 'red' :
           'green');
-  const Icon = ICONS[step.status];
+  const IconClass = ICONS[step.status];
 
   return (<div className='test-connection-step'>
-    <Badge count={Icon ? <Icon style={{ color }} /> : null}>
+    <Badge count={IconClass ? null : null}>
       <Tooltip title={
         <>{step.title}
           {step.status ? ": " + step.status : null}

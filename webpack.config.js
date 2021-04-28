@@ -30,10 +30,10 @@ module.exports = (env) => {
           test: /\.(woff(2)?|ttf|eot|svg|jpg|gif|png)(\?v=\d+\.\d+\.\d+)?$/,
           use: [
             {
-              loader: "file-loader",
+              loader: "file-loader?name=src/assets/images/[name].[ext]",
               options: {
-                name: "[path][name].[ext]",
-              },
+                esModule: false
+              }
             },
             {
               loader: "image-webpack-loader",

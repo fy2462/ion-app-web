@@ -35,7 +35,6 @@ const IonRoom: FC<{}> = () => {
   }
 
   return (
-    <Content className="app-center-layout">
       <Layout className="app-content-layout">
         <Sider
           width={320}
@@ -85,7 +84,6 @@ const IonRoom: FC<{}> = () => {
           </div>
         </Layout>
       </Layout>
-    </Content>
   );
 };
 

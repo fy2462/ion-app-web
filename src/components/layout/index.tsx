@@ -28,7 +28,7 @@ const useUnload = (fn) => {
 };
 
 const ContentLayout = () => {
-  
+
   const {
     login,
     setSetting,
@@ -82,7 +82,7 @@ const ContentLayout = () => {
       //   console.log("broadcast %s,%s!", mid, info);
       //   this._onMessageReceived(info);
       // });
-      client.ondatachannel = (ev: RTCDataChannelEvent) => {}
+      client.ondatachannel = (ev: RTCDataChannelEvent) => { }
 
 
     } else {
@@ -108,15 +108,17 @@ const ContentLayout = () => {
   return (
     <Layout className="app-layout">
       <IonHeader />
-      {login ? (
-        <IonRoom />
-      ) : loading ? (
-        <Spin size="large" tip="Connecting..." />
-      ) : (
-        <Card title="Join to Ion" className="app-login-card">
-          <LoginForm />
-        </Card>
-      )}
+      <Content className="app-center-layout">
+        {login ? (
+          <IonRoom />
+        ) : loading ? (
+          <Spin size="large" tip="Connecting..." />
+        ) : (
+          <Card title="Join to Ion" className="app-login-card">
+            <LoginForm />
+          </Card>
+        )}
+      </Content>
       {!login && (
         <Footer className=".app-footer">
           Powered by{" "}

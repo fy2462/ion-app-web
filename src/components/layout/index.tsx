@@ -1,6 +1,6 @@
 import { Layout, Modal, Card, Spin } from "antd";
 const { confirm } = Modal;
-const { Footer } = Layout;
+const { Footer, Content } = Layout;
 import { reactLocalStorage } from "reactjs-localstorage";
 import "styles/css/app.scss";
 import { observer } from "mobx-react";

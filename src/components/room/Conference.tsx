@@ -3,7 +3,8 @@ import { Spin, notification } from "antd";
 import { LocalVideoView, MainVideoView, SmallVideoView } from "../videoview";
 import { observer } from "mobx-react";
 import { SfuProxy } from "src/client";
-import * as Ion from "src/sdk";
+import { Client, LocalStream, RemoteStream, Constraints, Signal, Trickle  } from "src/sdk";
+import { PeerEvent, StreamEvent, IonConnector  } from "src/sdk/ion";
 import { StoreContext } from "src/components/App";
 import { Stream } from "src/types";
 import "styles/css/conference.scss";
@@ -11,7 +12,7 @@ import _ from "lodash";
 
 const Conference: FC<{}> = () => {
 
-  const client: Ion.Client = SfuProxy.getInstance().getDefaultClient();
+  const client: IonConnector = SfuProxy.getInstance().getDefaultClient();
 
   const {
     localAudioEnabled,
@@ -22,13 +23,13 @@ const Conference: FC<{}> = () => {
   } = useContext(StoreContext).ionStore;
 
   const [streams, setStreams] = useState<Stream[]>([])
-  const [localStream, setLocalStream] = useState<Ion.LocalStream>(null)
-  const [localScreen, setLocalScreen] = useState<Ion.LocalStream>(null)
+  const [localStream, setLocalStream] = useState<LocalStream>(null)
+  const [localScreen, setLocalScreen] = useState<LocalStream>(null)
   const [audioMuted, setAudioMuted] = useState<boolean>(false)
   const [videoMuted, setVideoMuted] = useState<boolean>(false)
 
   useEffect(() => {
-    client.ontrack = (track: MediaStreamTrack, stream: Ion.RemoteStream) => {
+    client.ontrack = (track: MediaStreamTrack, stream: RemoteStream) => {
       _handleAddStream({
         stream_id: stream.id,
         track_id: track.id, 
@@ -57,7 +58,7 @@ const Conference: FC<{}> = () => {
   };
 
   const _handleAddStream = async (stream: Stream) => {
-    let remote_stream = stream.stream as Ion.RemoteStream
+    let remote_stream = stream.stream as RemoteStream
     if (stream.track.kind === "video") {
       remote_stream.preferLayer("medium")
     }
@@ -95,13 +96,13 @@ const Conference: FC<{}> = () => {
     console.log(setting)
     try {
       if (enabled) {
-        setLocalStream(await Ion.LocalStream.getUserMedia({
+        setLocalStream(await LocalStream.getUserMedia({
           codec: setting.codec.toUpperCase(),
           resolution: setting.resolution,
           audio: true,
           video: true,
         }));
-        await client.publish(localStream);
+        await client.sfu.publish(localStream);
       } else {
         if (localStream) {
           _unpublish(localStream);
@@ -123,11 +124,11 @@ const Conference: FC<{}> = () => {
 
   const _handleScreenSharing = async enabled => {
     if (enabled) {
-      setLocalScreen(await Ion.LocalStream.getDisplayMedia({
+      setLocalScreen(await LocalStream.getDisplayMedia({
         codec: setting.codec.toUpperCase(),
         resolution: setting.resolution,
       }));
-      client.publish(localScreen);
+      client.sfu.publish(localScreen);
       let track = localScreen.getVideoTracks()[0];
       if (track) {
         track.addEventListener("ended", () => {

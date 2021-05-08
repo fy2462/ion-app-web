@@ -22,7 +22,8 @@ import DownloadLockIcon from "mdi-react/DownloadLockIcon";
 
 import { getRequest, notifyMessage } from "src/utils";
 import { SfuProxy } from "src/client";
-import * as Ion from "src/sdk";
+import { Client, LocalStream, RemoteStream, Constraints, Signal, Trickle  } from "src/sdk";
+import { PeerEvent, StreamEvent  } from "src/sdk/ion";
 import _ from "lodash";
 import { StepStateMap, LoginInfo } from "src/types";
 import { parse, write, MediaAttributes } from 'sdp-transform';
@@ -55,7 +56,7 @@ const ConnectionStep = ({ step }) => {
   const IconClass = ICONS[step.status];
 
   return (<div className='test-connection-step'>
-    <Badge count={IconClass ? null : null}>
+    <Badge count={IconClass ? <Icon component={IconClass} style={{ color }} /> : null}>
       <Tooltip title={
         <>{step.title}
           {step.status ? ": " + step.status : null}
@@ -135,43 +136,69 @@ const LoginForm = () => {
 
     let client = signalProxy.createNewClient();
 
-    signalProxy.getSfuSignal().onclose = (event: Event) => {
+    client.onclose = (event: Event) => {
       setLoading(false)
       notifyMessage("Signal Connect", "Connection closed!")
     };
 
-    signalProxy.getSfuSignal().onerror = (error: CloseEvent) => {
+    client.onerror = (error: Error) => {
       setLoading(false)
-      notifyMessage("Signal Connect", `Connection error!: ${error.reason}`)
+      notifyMessage("Signal Connect", `Connection error!: ${error.message}`)
     };
 
-    signalProxy.getSfuSignal().onopen = async () => {
+    client.onopen = async () => {
       setLoading(false)
       _testStep('biz', 'connected', signalProxy && signalProxy.getUrl());
       _testStep('lobby', 'pending');
       const rid = 'lobby-' + Math.floor(1000000 * Math.random());
-      await client.join(rid, 'lobby-user');
       _testStep('lobby', 'joined', 'room id=' + rid);
-      const localStream = await Ion.LocalStream.getUserMedia({
+      // let join_response = await client.join(rid, 'lobby-user');
+    };
+
+    client.onjoin = async (success: boolean, reason: string) => {
+      const localStream = await LocalStream.getUserMedia({
         codec: 'vp8',
         resolution: 'hd',
         audio: true,
         video: true,
       });
       _testStep('publish', 'pending');
-      client.publish(localStream);
+      client.sfu.publish(localStream);
       _testStep('publish', 'no candidates');
-      client.ontrack = (track: MediaStreamTrack, stream: Ion.RemoteStream) => {
-        _testStep('publish', 'published', "info");
-        _testStep('subscribe', 'subscribed', 'mid: ');
-        client.leave();
-        client = null;
-        setRunTest({
-          signalSuccess: true,
-          testing: false,
-        })
-      };
     };
+
+    client.ontrack = async (track: MediaStreamTrack, stream: RemoteStream) => {
+      _testStep('publish', 'published', "info");
+      _testStep('subscribe', 'subscribed', 'mid: ');
+      let leave_response = await client.leave('lobby-user');
+      client = null;
+      setRunTest({
+        signalSuccess: true,
+        testing: false,
+      })
+      client.close()
+    };
+
+    client.onleave = (reason: string) => {
+      notifyMessage("Biz leave", `${reason}`)
+    }
+
+    client.onpeerevent = (ev: PeerEvent) => {
+      notifyMessage("Biz peer event", `${ev.peer.uid}`)
+    }
+
+    client.onstreamevent = (ev: StreamEvent) => {
+      notifyMessage("Biz peer event", `${ev.uid}`)
+    }
+
+    client.ondatachannel = (ev: RTCDataChannelEvent) => {
+      notifyMessage("Biz data channel", `${ev.returnValue}`)
+    }
+
+    client.onspeaker = (ev: string[]) => {
+      notifyMessage("Biz speaker", `${_.join(ev, ",")}`)
+    }
+
   };
 
   const _validField = (errorInfo: any) => {

@@ -81,19 +81,30 @@ export class IonConnector {
     ondatachannel?: (ev: RTCDataChannelEvent) => void;
 
     onspeaker?: (ev: string[]) => void;
+    
+    onopen?: () => void;
+
+    onclose?: (ev: Event) => void;
 
     constructor(url: string, config?: Configuration) {
         this._sid = "";
         this._uid = "";
         this._sfu = undefined;
         this._biz = new BizClient(url);
+
+        const signal = new IonSFUGRPCWebSignal(url);
+
+        signal.onopen = () => this.onopen?.call(this)
+
+        signal.onclose = (ev: Event) => this.onclose?.call(this, ev)
+
+        signal.onerror = (error: Event) => this.onerror?.call(this, error)
       
         this._biz.on("join-reply", async (success: boolean, reason: string) => {
             if (this.onjoin) {
                 this.onjoin(success, reason);
             }
             if (success && !this._sfu) {
-                const signal = new IonSFUGRPCWebSignal(url);
                 const sfu = new Client(signal, config);
 
                 sfu.ontrack =   (track: MediaStreamTrack, stream: RemoteStream) => 

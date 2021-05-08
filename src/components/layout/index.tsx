@@ -12,7 +12,8 @@ import React, { useContext, useEffect, useState, useRef } from "react";
 import { Setting } from 'src/types';
 import { notifyMessage } from 'src/utils';
 import { SfuProxy } from "src/client";
-import * as Ion from "src/sdk";
+import { Client, LocalStream, RemoteStream, Constraints, Signal, Trickle  } from "src/sdk";
+import { PeerEvent, StreamEvent, IonConnector  } from "src/sdk/ion";
 import _ from "lodash";
 
 
@@ -38,7 +39,7 @@ const ContentLayout = () => {
     setMessages,
   } = useContext(StoreContext).ionStore;
 
-  let client: Ion.Client = SfuProxy.getInstance().getDefaultClient();
+  let client: IonConnector = SfuProxy.getInstance().getDefaultClient();
 
   useEffect(() => {
     let settings: Setting = reactLocalStorage.getObject("settings");
@@ -49,10 +50,10 @@ const ContentLayout = () => {
     if (login) {
       const signalProxy = SfuProxy.getInstance()
       const signal = signalProxy.getSfuSignal();
-      signal.onclose = (event: Event) => {
+      client.onclose = (event: Event) => {
         notifyMessage("Signal Connect", "Connection closed!")
       };
-      signal.onopen = () => {
+      client.onopen = () => {
         notifyMessage("Signal Connect", "Connection open!")
       };
       // signal.onmessage("peer-join", (id, info) => {
@@ -72,9 +73,9 @@ const ContentLayout = () => {
       //   notifyMessage("Peer Leave", "peer => " + id + ", leave!");
       //   _onSystemMessage(info.name + ", leave!")
       // });
-      client.join(loginInfo.roomId, loginInfo.displayName).then(() => {
+      // client.join(loginInfo.roomId, loginInfo.displayName).then(() => {
 
-      });
+      // });
       client.onspeaker = (ev: string[]) => {
         _.map(ev, message => notifyMessage("Client message", message))
       }
@@ -97,7 +98,7 @@ const ContentLayout = () => {
   }
 
   const _cleanUp = async () => {
-    client.leave();
+    client.leave(loginInfo.displayName);
   };
 
   useUnload(event => {

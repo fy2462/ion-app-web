@@ -8,6 +8,7 @@ import { Message } from 'src/types';
 import { observer } from "mobx-react";
 import { SfuProxy } from "src/client";
 import { Client, Signal } from "src/sdk";
+import { IonConnector } from 'src/sdk/ion';
 
 const ChatFeed = () => {
     const { 
@@ -60,7 +61,7 @@ const ChatFeed = () => {
       "senderName": loginInfo.displayName,
       "msg": inputMessage,
     };
-    let client: Client = SfuProxy.getInstance().getDefaultClient();
+    let client: IonConnector = SfuProxy.getInstance().getDefaultClient();
     // this.client.broadcast(info);
     let uid = 0;
     setMessages({ id: uid.toString(), message: inputMessage, senderName: 'me' })

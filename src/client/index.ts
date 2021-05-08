@@ -1,5 +1,5 @@
 import { Client, Signal } from "src/sdk";
-import { IonSFUGRPCWebSignal } from 'src/sdk/signal/grpc-web-impl';
+import { IonConnector } from 'src/sdk/ion';
 const serverConfig = require("config/config.json")
 
 const getUrl: () => string = () => {
@@ -12,30 +12,28 @@ const getUrl: () => string = () => {
 class SfuProxy {
 
     private static instance: SfuProxy;
-    private client_: Client;
-    private signal_: IonSFUGRPCWebSignal;
+    private client_: IonConnector;
     private url_: string;
 
     private constructor() {
         const url = getUrl();
-        this.signal_ = new IonSFUGRPCWebSignal(url);
-        this.client_ = new Client(this.signal_);
+        this.client_ = new IonConnector(url);
     }
 
-    public getDefaultClient: () => Client = () => {
+    public getDefaultClient: () => IonConnector = () => {
         return this.client_;
     }
 
-    public createNewClient: () => Client = () => {
-        return new Client(this.signal_);
+    public createNewClient: () => IonConnector = () => {
+        return new IonConnector(getUrl());
     }
 
     public getUrl: () => string = () => {
         return this.url_;
     }
 
-    public getSfuSignal: () => IonSFUGRPCWebSignal = () => {
-        return this.signal_;
+    public getSfuSignal: () => Client = () => {
+        return this.client_.sfu;
     }
 
     static getInstance() {

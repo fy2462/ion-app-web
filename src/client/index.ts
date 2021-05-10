@@ -4,9 +4,10 @@ const serverConfig = require("config/config.json")
 
 const getUrl: () => string = () => {
     const is_dev_mode = process.env.NODE_ENV == "development";
-    const proto = is_dev_mode ? "ws" : "wss";
+    let proto = is_dev_mode ? "ws" : "wss";
+    proto = "http"
     const url = proto + "://" + serverConfig.serverIp;
-    return "http://" + serverConfig.serverIp;
+    return url;
 }
 
 class SfuProxy {

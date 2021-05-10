@@ -105,12 +105,7 @@ module.exports = (env) => {
     devServer: {
       host: "0.0.0.0",
       contentBase: [path.join(__dirname, "src")],
-      proxy: {
-        "/ws": {
-          target: "ws://localhost:8443",
-          ws: true,
-        },
-      },
+      port: 8022,
     },
   };
 };

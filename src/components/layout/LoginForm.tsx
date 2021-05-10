@@ -1,4 +1,4 @@
-import React, { FC, useContext, useState, useEffect } from "react";
+import React, { FC, useContext, useState, useEffect, useCallback } from "react";
 import Center from 'react-center';
 import { observer } from "mobx-react";
 import { Form, Input, Button, Checkbox, Avatar, Badge, Tooltip } from "antd";
@@ -24,11 +24,11 @@ import { getRequest, notifyMessage } from "src/utils";
 import { SfuProxy } from "src/client";
 import { Client, LocalStream, RemoteStream, Constraints, Signal, Trickle  } from "src/sdk";
 import { PeerEvent, StreamEvent  } from "src/sdk/ion";
-import _ from "lodash";
+import _, { stubTrue } from "lodash";
 import { StepStateMap, LoginInfo } from "src/types";
 import { parse, write, MediaAttributes } from 'sdp-transform';
 
-const TEST_STEPS: StepStateMap = {
+let TEST_STEPS: StepStateMap = {
   "biz": { title: 'Biz Websocket', icon: <ServerNetworkIcon />, status: "pending" },
   "lobby": { title: 'Joining Test Room', icon: <GoogleClassroomIcon />, status: "pending" },
   "publish": { title: 'Publish', icon: <UploadLockIcon />, status: "pending" },
@@ -80,15 +80,6 @@ const LoginForm = () => {
 
   let signalProxy: SfuProxy = null;
 
-  const [testState, setTestState] = useState({
-    steps: TEST_STEPS
-  })
-
-  const [runTest, setRunTest] = useState({
-    testing: false,
-    signalSuccess: false,
-  });
-
   useEffect(() => {
     // initial parameters
     let localStorage = reactLocalStorage.getObject("loginInfo");
@@ -113,6 +104,20 @@ const LoginForm = () => {
 
   }, []);
 
+  const [testState, setTestState] = useState({
+    steps: {
+      "biz": { title: 'Biz Websocket', icon: <ServerNetworkIcon />, status: "pending" },
+      "lobby": { title: 'Joining Test Room', icon: <GoogleClassroomIcon />, status: "pending" },
+      "publish": { title: 'Publish', icon: <UploadLockIcon />, status: "pending" },
+      "subscribe": { title: 'Subscription', icon: <DownloadLockIcon />, status: "pending" },
+    }
+  })
+
+  const [runTest, setRunTest] = useState({
+    testing: false,
+    signalSuccess: false,
+  });
+
   const _handleSubmit = async (values) => {
     if (runTest.signalSuccess) {
       loginSuccessful(true, false, values, !values.audioOnly);
@@ -121,7 +126,20 @@ const LoginForm = () => {
     }
   }
 
-  const _testConnection = async () => {
+  const _testConnection = () => {
+
+    const _testStep = (step: string, status: string, info: string = null) => {
+      const prior = testState.steps[step];
+      let new_status = { ...prior, status, info }
+      let test_state = {
+        steps: {
+          ...testState.steps, [step]: new_status
+        }
+      }
+      setTestState(test_state);
+      console.log('Test Connection:', step, status, info);
+    }
+
 
     if (!signalProxy) {
       notifyMessage("Signal Connect", "Not found Signal server, please check configuration.")
@@ -132,39 +150,47 @@ const LoginForm = () => {
       testing: true,
     })
 
-    setLoading(true);
-
+    // setLoading(true);
+    const rid = 'lobby-' + Math.floor(1000000 * Math.random());
     let client = signalProxy.createNewClient();
 
     client.onclose = (event: Event) => {
-      setLoading(false)
+      // setLoading(false)
       notifyMessage("Signal Connect", "Connection closed!")
     };
 
     client.onerror = (error: Error) => {
-      setLoading(false)
+      // setLoading(false)
       notifyMessage("Signal Connect", `Connection error!: ${error.message}`)
     };
 
-    client.onopen = async () => {
-      setLoading(false)
+    client.onopen = () => {
+      // setLoading(false)
       _testStep('biz', 'connected', signalProxy && signalProxy.getUrl());
-      _testStep('lobby', 'pending');
-      const rid = 'lobby-' + Math.floor(1000000 * Math.random());
-      _testStep('lobby', 'joined', 'room id=' + rid);
-      // let join_response = await client.join(rid, 'lobby-user');
     };
 
-    client.onjoin = async (success: boolean, reason: string) => {
-      const localStream = await LocalStream.getUserMedia({
-        codec: 'vp8',
-        resolution: 'hd',
-        audio: true,
-        video: true,
-      });
+    const _testPublish = async () => {
       _testStep('publish', 'pending');
-      client.sfu.publish(localStream);
-      _testStep('publish', 'no candidates');
+      try {
+        const localStream = await LocalStream.getUserMedia({
+          codec: 'vp8',
+          resolution: 'hd',
+          audio: true,
+          video: true,
+        });
+        client.sfu.publish(localStream);
+        _testStep('publish', 'no candidates');
+      } catch (e) {
+        console.log("Get local stream error => " + e);
+        _testStep('publish', 'error');
+      }
+    }
+
+    client.onjoin = (success: boolean, reason: string) => {
+      if (success) {
+        _testStep('lobby', 'joined', 'room id=' + rid);
+        setTimeout(_testPublish, 2000);
+      }
     };
 
     client.ontrack = async (track: MediaStreamTrack, stream: RemoteStream) => {
@@ -199,21 +225,12 @@ const LoginForm = () => {
       notifyMessage("Biz speaker", `${_.join(ev, ",")}`)
     }
 
+    let join_response = client.join(rid, 'lobby-user', new Map<string, any>(), undefined);
+    let flag = 1
   };
 
   const _validField = (errorInfo: any) => {
     notifyMessage("Signal Connect", `Please check your input, error: ${errorInfo}`);
-  }
-
-  const _testStep = (step: string, status: string, info: string = null) => {
-    const prior = testState.steps[step];
-    setTestState({
-      steps: {
-        ...testState.steps,
-        [step]: { ...prior, status, info }
-      }
-    });
-    console.log('Test Connection:', step, status, info);
   }
 
   return (

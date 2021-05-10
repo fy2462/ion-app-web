@@ -22,6 +22,7 @@ class IonSFUGRPCWebSignal implements Signal {
     this._event = new EventEmitter();
     this.client = new SFUClient(uri, {
       transport: grpc.WebsocketTransport(),
+      debug: true
     });
 
     this.streaming = this.client.signal();
@@ -112,10 +113,10 @@ class IonSFUGRPCWebSignal implements Signal {
   }
 
   set onopen(onopen: () => void) {
+    this._onopen = onopen;
     if (this.streaming !== undefined) {
       onopen();
     }
-    this._onopen = onopen;
   }
 
   set onerror(onerror: (error: Event) => void) {

@@ -89,6 +89,7 @@ const MediaSettings = () => {
             let videoDevices: MediaDeviceInfo[] = [];
             let audioDevices: MediaDeviceInfo[] = [];
             let audioOutputDevices: MediaDeviceInfo[] = [];
+            // @ts-ignore
             const mediaDevices = navigator.mediaDevices as any;
             mediaDevices.enumerateDevices()
                 .then((devices) => {
@@ -182,6 +183,7 @@ const MediaSettings = () => {
             audio: { deviceId: audioSource ? { exact: audioSource } : undefined },
             video: { deviceId: videoSource ? { exact: videoSource } : undefined }
         };
+        // @ts-ignore
         navigator.mediaDevices.getUserMedia(constraints)
             .then(function (stream) {
                 gStream.current = stream; // make stream available to console
@@ -190,6 +192,7 @@ const MediaSettings = () => {
                 gSoundMeter.current.connectToSource(stream);
                 setTimeout(_soundMeterProcess, 100);
                 // Refresh button list in case labels have become available
+                // @ts-ignore
                 return navigator.mediaDevices.enumerateDevices();
             })
             .then((devces) => { })

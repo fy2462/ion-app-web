@@ -104,14 +104,7 @@ const LoginForm = () => {
 
   }, []);
 
-  const [testState, setTestState] = useState({
-    steps: {
-      "biz": { title: 'Biz Websocket', icon: <ServerNetworkIcon />, status: "pending" },
-      "lobby": { title: 'Joining Test Room', icon: <GoogleClassroomIcon />, status: "pending" },
-      "publish": { title: 'Publish', icon: <UploadLockIcon />, status: "pending" },
-      "subscribe": { title: 'Subscription', icon: <DownloadLockIcon />, status: "pending" },
-    }
-  })
+  const [testState, setTestState] = useState({ steps: TEST_STEPS })
 
   const [runTest, setRunTest] = useState({
     testing: false,
@@ -131,12 +124,7 @@ const LoginForm = () => {
     const _testStep = (step: string, status: string, info: string = null) => {
       const prior = testState.steps[step];
       let new_status = { ...prior, status, info }
-      let test_state = {
-        steps: {
-          ...testState.steps, [step]: new_status
-        }
-      }
-      setTestState(test_state);
+      setTestState(prevState => ({ steps: { ...prevState.steps, [step]: new_status} }));
       console.log('Test Connection:', step, status, info);
     }
 
